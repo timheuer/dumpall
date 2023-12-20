@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text;
 
 var dotnetInfo = Process.Start(new ProcessStartInfo
 {
@@ -81,7 +82,11 @@ catch (Exception ex)
 }
 
 
-string[] extensionName = ["ms-dotnettools.csdevkit","ms-dotnettools.csharp"];
+string[] extensionsToSearch = ["ms-dotnettools.csdevkit","ms-dotnettools.csharp", "ms-azuretools.azure-dev"];
+StringBuilder extensionList = new();
+
+extensionList.AppendLine("VS Code Extensions");
+
 bool insiders = false;
 
 // check for an argument to see if insiders is being used if '-i' is passed in
@@ -99,35 +104,23 @@ string csharpVersion = string.Empty;
 try
 {
     string[] directories = Directory.GetDirectories(vscodeExtensionsPath);
-    foreach (string dir in directories)
-    {
-        if (dir.Contains("ms-dotnettools.csdevkit"))
-        {
-            string packageJsonPath = Path.Combine(dir, "package.json");
-            if (File.Exists(packageJsonPath))
-            {
-                string jsonText = File.ReadAllText(packageJsonPath);
-                var json = System.Text.Json.JsonDocument.Parse(jsonText);
-                if (json.RootElement.TryGetProperty("version", out var version))
-                {
-                    csdevkitVersion = $"{Environment.NewLine}  C# Dev Kit: {version.GetString()}";
-                }
-            }
-        }
-    }
 
-    foreach (string dir in directories)
+
+    for (int i = 0; i < extensionsToSearch.Length; i++)
     {
-        if (dir.Contains("ms-dotnettools.csharp"))
+        foreach (string dir in directories)
         {
-            string packageJsonPath = Path.Combine(dir, "package.json");
-            if (File.Exists(packageJsonPath))
+            if (dir.Contains(extensionsToSearch[i]))
             {
-                string jsonText = File.ReadAllText(packageJsonPath);
-                var json = System.Text.Json.JsonDocument.Parse(jsonText);
-                if (json.RootElement.TryGetProperty("version", out var version))
+                string packageJsonPath = Path.Combine(dir, "package.json");
+                if (File.Exists(packageJsonPath))
                 {
-                    csharpVersion = $"{Environment.NewLine}  C#: {version.GetString()}";
+                    string jsonText = File.ReadAllText(packageJsonPath);
+                    var json = System.Text.Json.JsonDocument.Parse(jsonText);
+                    if (json.RootElement.TryGetProperty("version", out var version))
+                    {
+                        extensionList.AppendLine($"  {extensionsToSearch[i]}: {version.GetString()}");
+                    }
                 }
             }
         }
@@ -135,15 +128,13 @@ try
 }
 catch (DirectoryNotFoundException)
 {
-    // if the directory is not found, then write out that it is not installed
-    csdevkitVersion = $"{Environment.NewLine}  C# Dev Kit: not found, are you using insiders? pass -i to the command";
-    csharpVersion = $"{Environment.NewLine}  C#: not found, are you using insiders? pass -i to the command";
+    extensionList.AppendLine("VS Code Extensions not found. Are you using Insiders? Pass `-i` to the command");
 }
 
 
 // combine the output of dotnetinfo with azdversion and write that output to the console
 // if an argument of -o is passed, write it to a file else to the console window
-var output = $"{dotnetInfo}{Environment.NewLine}Azure Developer CLI:{Environment.NewLine}  {azdVersion}{Environment.NewLine}Azure CLI:{Environment.NewLine}  {azVersion}{Environment.NewLine}VS Code Extensions{csdevkitVersion}{csharpVersion}";
+var output = $"{dotnetInfo}{Environment.NewLine}Azure Developer CLI:{Environment.NewLine}  {azdVersion}{Environment.NewLine}Azure CLI:{Environment.NewLine}  {azVersion}{Environment.NewLine}{extensionList}";
 if (args.Contains("-o"))
 {
     // write it to the argument passed in after the -o
