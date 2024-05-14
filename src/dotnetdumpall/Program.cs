@@ -48,7 +48,7 @@ string windowsProgFiles = Environment.GetFolderPath(Environment.SpecialFolder.Pr
 
 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 {
-    azPath = Path.Combine(windowsProgFiles,@"Microsoft SDKs\Azure\CLI2\wbin\az.cmd");
+    azPath = Path.Combine(windowsProgFiles, @"Microsoft SDKs\Azure\CLI2\wbin\az.cmd");
 }
 else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 {
@@ -82,7 +82,7 @@ catch (Exception ex)
 }
 
 
-string[] extensionsToSearch = ["ms-dotnettools.csdevkit","ms-dotnettools.csharp", "ms-azuretools.azure-dev"];
+string[] extensionsToSearch = ["ms-dotnettools.csdevkit", "ms-dotnettools.csharp", "ms-azuretools.azure-dev", "ms-dotnettools.dotnet-maui"];
 StringBuilder extensionList = new();
 
 extensionList.AppendLine("VS Code Extensions");
