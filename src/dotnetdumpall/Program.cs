@@ -49,6 +49,12 @@ string windowsProgFiles = Environment.GetFolderPath(Environment.SpecialFolder.Pr
 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 {
     azPath = Path.Combine(windowsProgFiles, @"Microsoft SDKs\Azure\CLI2\wbin\az.cmd");
+    //check to make sure the path exists
+    if (!File.Exists(azPath))
+    {
+        // check the x86 program files folder
+        azPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"Microsoft SDKs\Azure\CLI2\wbin\az.cmd");
+    }
 }
 else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 {
