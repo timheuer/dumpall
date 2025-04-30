@@ -27,7 +27,7 @@ catch (Exception ex)
 {
     if (ex.Message.Contains("The system cannot find the file specified."))
     {
-        azdVersion = "Azure Devevloper CLI not installed";
+        azdVersion = "Azure Developer CLI not installed";
     }
     else
     {
@@ -91,8 +91,8 @@ catch (Exception ex)
 string[] extensionsToSearch = ["ms-dotnettools.csdevkit", "ms-dotnettools.csharp", "ms-azuretools.azure-dev", "ms-dotnettools.dotnet-maui"];
 StringBuilder extensionList = new();
 
-extensionList.AppendLine("VS Code Extensions");
-
+// Get VS Code version
+string vscodeVersion = "VS Code not found";
 bool insiders = false;
 
 // check for an argument to see if insiders is being used if '-i' is passed in
@@ -100,12 +100,62 @@ if (args.Contains("-i"))
 {
     insiders = true;
 }
+
 string vscodeFolder = insiders ? ".vscode-insiders" : ".vscode";
+string vscodePath = insiders ? "Microsoft VS Code Insiders" : "Microsoft VS Code";
+
+// Try to find VS Code's product.json - check both user and system installations
+string userProductJsonPath = Path.Combine(
+    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+    vscodePath,
+    "product.json"
+);
+
+string systemProductJsonPath = Path.Combine(
+    Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+    vscodePath,
+    "resources",
+    "app",
+    "product.json"
+);
+
+// Also check Program Files (x86) for 32-bit installations
+string systemX86ProductJsonPath = Path.Combine(
+    Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+    vscodePath,
+    "resources",
+    "app",
+    "product.json"
+);
+
+try
+{
+    // Check all possible locations for product.json
+    string[] possiblePaths = new[] { userProductJsonPath, systemProductJsonPath, systemX86ProductJsonPath };
+
+    foreach (var path in possiblePaths)
+    {
+        if (File.Exists(path))
+        {
+            string jsonText = File.ReadAllText(path);
+            var json = System.Text.Json.JsonDocument.Parse(jsonText);
+            if (json.RootElement.TryGetProperty("version", out var version))
+            {
+                vscodeVersion = version.GetString() ?? "Version not found";
+                break; // Exit loop once we find a valid version
+            }
+        }
+    }
+}
+catch (Exception)
+{
+    vscodeVersion = "Could not determine VS Code version";
+}
+
+extensionList.AppendLine($"VS Code: {vscodeVersion}");
+extensionList.AppendLine("\nVS Code Extensions:");
 
 string vscodeExtensionsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), vscodeFolder, "extensions");
-
-string csdevkitVersion = string.Empty;
-string csharpVersion = string.Empty;
 
 try
 {
